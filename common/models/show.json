@@ -9,6 +9,10 @@
     "title": {
       "type": "string",
       "required": true
+    },
+    "year": {
+      "type": "string",
+      "required": true
     }
   },
   "validations": [],
