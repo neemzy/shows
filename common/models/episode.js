@@ -18,7 +18,7 @@ module.exports = function(Episode) {
     // Episode must be linked to a valid Show
     Episode.validateAsync('showId', function (err, done) {
         this.show(function (error, show) {
-            if (error || null === show) {
+            if (error || !show) {
                 err();
             }
 
