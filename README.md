@@ -5,3 +5,18 @@ Sample [LoopBack](http://loopback.io) application with TV shows and episodes, de
 - [Schema.org](http://schema.org/)
 - [JSON-LD](http://json-ld.org/)
 - [Hydra](http://www.markus-lanthaler.com/hydra/)
+
+## Get started
+
+```
+npm install
+sudo npm install -g nodemon
+nodemon .
+```
+
+## Toy around
+
+```
+curl -X POST -d "title=Community&year=2009" http://0.0.0.0:3000/api/shows
+curl -X POST -d "title=Pilot&season=1&number=1" http://0.0.0.0:3000/api/shows/1/episodes
+```

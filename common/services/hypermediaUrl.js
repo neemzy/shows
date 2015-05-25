@@ -1,34 +1,50 @@
-var pluralizer = require('./pluralizer');
-
 module.exports = {
     /**
-     * @param {String} baseUrl
-     * @param {String} owner
-     * @param {String} owned
-     * @param {Number} id
+     * Makes a Model name URL-suitable
+     *
+     * @param {String} name
      *
      * @return {String}
      */
-    generate: function(base, owner, owned, id) {
+    vulgarize: function(name) {
         'use strict';
 
-        var uri = pluralizer(owner, true) + '/' + id + '/' + pluralizer(owned, true);
+        name = name.toLowerCase();
 
-        return base.replace(/\/$/g, '') + '/' + uri.replace(/^\//g, '');
+        var config = require('../models/' + name + '.json');
+
+        if ('plural' in config) {
+            name = config.plural.toLowerCase();
+        } else {
+            name += 's';
+        }
+
+        return name;
     },
 
     /**
-     * @param {Model}  model
-     * @param {String} baseUrl
      * @param {String} owner
+     * @param {Number} id
      * @param {String} owned
+     *
+     * @return {String}
      */
-    append: function(model, baseUrl, owner, owned) {
+    generate: function(owner, id, owned) {
         'use strict';
 
-        // Overcome visibility limitations set up by LoopBack
-        model.__defineGetter__(pluralizer(owned, true), function() {
-            return this.generate(baseUrl, owner, owned, model.id);
-        }.bind(this));
+        owned = owned || '';
+
+        var base = require('../../server/config').restApiRoot,
+            uri = this.vulgarize(owner);
+
+        if (0 < id) {
+            uri += '/' + id;
+        }
+
+        if (0 < owned.length) {
+            uri = uri + '/' + this.vulgarize(owned);
+        }
+
+        return base.replace(/\/$/g, '') + '/' + uri;
     }
 };

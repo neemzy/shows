@@ -1,30 +1,20 @@
-var baseUrl = require('../../server/baseUrl'),
-    hypermediaUrl = require('../services/hypermediaUrl');
+var toArray = require('../services/toArray'),
+    urlAppender = require('../services/urlAppender');
 
 module.exports = function(Show) {
     'use strict';
 
-    /**
-     * @param {Model}  model
-     * @param {String} baseUrl
-     */
-    var addEpisodesUrl = function (model, baseUrl) {
-        hypermediaUrl.append(model, baseUrl, 'Show', 'Episode');
-    };
-
-    // Add Episode list URL to all responses
+    // Add hypermedia URLs to responses
     Show.afterRemote('**', function (ctx, show, next) {
-        if (ctx.result) {
-            var base = baseUrl(ctx.req);
+        var isShow = (-1 === ctx.methodString.indexOf('prototype.__'));
 
-            if (Array.isArray(ctx.result)) {
-                ctx.result.forEach(function (result) {
-                    addEpisodesUrl(result, base);
-                });
+        toArray(ctx.result).forEach(function (result) {
+            if (isShow) {
+                urlAppender.appendEpisodesUrlToShow(result);
             } else {
-                addEpisodesUrl(ctx.result, base);
+                urlAppender.appendShowUrlToEpisode(result);
             }
-        }
+        });
 
         next();
     });

@@ -1,3 +1,6 @@
+var toArray = require('../services/toArray'),
+    urlAppender = require('../services/urlAppender');
+
 module.exports = function(Episode) {
     'use strict';
 
@@ -24,5 +27,17 @@ module.exports = function(Episode) {
 
             done();
         });
+    });
+
+    // An Episode for this Show, number and season number must not already exist
+    Episode.validatesUniquenessOf('number', { scopedTo: ['season', 'showId'] });
+
+    // Add Show URL to all responses
+    Episode.afterRemote('**', function (ctx, show, next) {
+        toArray(ctx.result).forEach(function (result) {
+            urlAppender.appendShowUrlToEpisode(result);
+        });
+
+        next();
     });
 };
