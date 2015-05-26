@@ -1,50 +1,48 @@
+var getConfig = require('./getConfig');
+
 module.exports = {
     /**
      * Makes a Model name URL-suitable
      *
-     * @param {String} name
+     * @param {String}  name
+     * @param {Boolean} singular
      *
      * @return {String}
      */
-    vulgarize: function(name) {
+    vulgarize: function(name, singular) {
         'use strict';
 
-        name = name.toLowerCase();
+        var result = name.toLowerCase();
 
-        var config = require('../models/' + name + '.json');
+        if (!singular) {
+            var plural = getConfig(name, 'plural')
 
-        if ('plural' in config) {
-            name = config.plural.toLowerCase();
-        } else {
-            name += 's';
+            if ('undefined' !== typeof plural) {
+                result = plural.toLowerCase();
+            } else {
+                result += 's';
+            }
         }
 
-        return name;
+        return result;
     },
 
     /**
-     * @param {String} owner
-     * @param {Number} id
-     * @param {String} owned
+     * @param {Object} segments
      *
      * @return {String}
      */
-    generate: function(owner, id, owned) {
+    generate: function(segments) {
         'use strict';
 
-        owned = owned || '';
+        var root = require('../../server/config').restApiRoot,
+            uri = '';
 
-        var base = require('../../server/config').restApiRoot,
-            uri = this.vulgarize(owner);
-
-        if (0 < id) {
-            uri += '/' + id;
+        for (var key in segments) {
+            uri += '/' + key;
+            segments[key] && (uri += '/' + segments[key]);
         }
 
-        if (0 < owned.length) {
-            uri = uri + '/' + this.vulgarize(owned);
-        }
-
-        return base.replace(/\/$/g, '') + '/' + uri;
+        return root.replace(/\/$/g, '') + uri;
     }
 };

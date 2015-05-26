@@ -1,5 +1,5 @@
 var toArray = require('../services/toArray'),
-    urlAppender = require('../services/urlAppender');
+    appender = require('../services/hypermediaAppender');
 
 module.exports = function(Episode) {
     'use strict';
@@ -35,9 +35,7 @@ module.exports = function(Episode) {
     // Add Show URL to all responses
     Episode.afterRemote('**', function (ctx, show, next) {
         toArray(ctx.result).forEach(function (result) {
-            urlAppender.appendShowUrlToEpisode(result);
+            appender.appendToEpisode(result, next);
         });
-
-        next();
     });
 };

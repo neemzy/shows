@@ -28,5 +28,7 @@
     }
   },
   "acls": [],
-  "methods": []
+  "methods": [],
+  "hidden": ["id", "showId"],
+  "context": "http://schema.org/TVEpisode"
 }

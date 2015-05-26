@@ -1,5 +1,5 @@
 var toArray = require('../services/toArray'),
-    urlAppender = require('../services/urlAppender');
+    appender = require('../services/hypermediaAppender');
 
 module.exports = function(Show) {
     'use strict';
@@ -10,12 +10,10 @@ module.exports = function(Show) {
 
         toArray(ctx.result).forEach(function (result) {
             if (isShow) {
-                urlAppender.appendEpisodesUrlToShow(result);
+                appender.appendToShow(result, next);
             } else {
-                urlAppender.appendShowUrlToEpisode(result);
+                appender.appendToEpisode(result, next);
             }
         });
-
-        next();
     });
 };

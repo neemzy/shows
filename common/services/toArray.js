@@ -1,4 +1,11 @@
+/**
+ * @param {*} value
+ *
+ * @return {Array}
+ */
 module.exports = function(value) {
+    'use strict';
+
     if (!value) {
         return [];
     }

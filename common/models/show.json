@@ -24,5 +24,7 @@
     }
   },
   "acls": [],
-  "methods": []
+  "methods": [],
+  "hidden": ["id"],
+  "context": "http://schema.org/TVSeries"
 }
