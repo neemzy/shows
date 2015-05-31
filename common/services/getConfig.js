@@ -9,9 +9,5 @@ module.exports = function(name, key) {
 
     var config = require('../models/' + name.toLowerCase() + '.json');
 
-    if (key in config) {
-        return config[key];
-    }
-
-    return undefined;
+    return config[key];
 };
