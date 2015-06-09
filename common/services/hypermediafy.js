@@ -1,4 +1,5 @@
-var appendGetter = require('./appendGetter'),
+var async = require('async'),
+    appendGetter = require('./appendGetter'),
     generateUri = require('./generateUri')
     getConfig = require('./getConfig'),
     vulgarize = require('./vulgarize'),
@@ -64,31 +65,40 @@ var appendGetter = require('./appendGetter'),
 module.exports = function(results, models, callback) {
     'use strict';
 
-    /** @type {String} */
-    var type = '';
+    if (0 == results.length) {
+        callback();
 
-    if (0 < results.length) {
-        // Determine type from first result
-        for (var key in models) {
-            if (results[0] instanceof models[key]) {
-                type = key;
-
-                break;
-            }
-        }
-
-        // Do stuff depending on type
-        // TODO: make it all abstract
-        results.forEach(function (result) {
-            switch (type) {
-                case 'Show':
-                    processShow(result, callback);
-                    break;
-
-                case 'Episode':
-                    processEpisode(result, callback);
-                    break;
-            }
-        });
+        return;
     }
+
+    var type = '', /** @var {String} */
+        operation; /** @var {Function} */
+
+    // Determine type from first result
+    for (var key in models) {
+        if (results[0] instanceof models[key]) {
+            type = key;
+
+            break;
+        }
+    }
+
+    // TODO: abstract this out
+    switch (type) {
+        case 'Show':
+            operation = processShow;
+            break;
+
+        case 'Episode':
+            operation = processEpisode;
+            break;
+    }
+
+    if ('undefined' === typeof operation) {
+        callback();
+
+        return;
+    }
+
+    async.each(results, operation, callback);
 };
