@@ -25,6 +25,8 @@
   },
   "acls": [],
   "methods": [],
-  "hidden": ["id"],
-  "context": "http://schema.org/TVSeries"
+  "hidden": ["id", "title"],
+  "hypermedia": {
+    "@type": "http://schema.org/TVSeries"
+  }
 }

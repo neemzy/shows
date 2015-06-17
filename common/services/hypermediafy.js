@@ -14,16 +14,20 @@ var async = require('async'),
         var self = vulgarize('Show'),
             selfSegments = {},
             children = vulgarize('Episode'),
-            childrenSegments = {};
+            childrenSegments = {},
+            config = getConfig('Show', 'hypermedia');
 
-        // Build URI (order matters)
         selfSegments[self] = show.id;
         childrenSegments[self] = show.id;
         childrenSegments[children] = null;
 
         show.episodes.count(function (err, count) {
-            appendGetter(show, '@context', getConfig('Show', 'context'));
+            for (var key in config) {
+                appendGetter(show, key, config[key]);
+            }
+
             appendGetter(show, '@id', generateUri(selfSegments));
+            appendGetter(show, 'name', show.title);
             appendGetter(show, children, generateUri(childrenSegments));
             appendGetter(show, 'numberOfEpisodes', count);
 
@@ -41,16 +45,20 @@ var async = require('async'),
         var self = vulgarize('Episode'),
             selfSegments = {},
             parent = vulgarize('Show'),
-            parentSegments = {};
+            parentSegments = {},
+            config = getConfig('Episode', 'hypermedia');
 
-        // Order matters
         selfSegments[parent] = episode.showId;
         parentSegments[parent] = episode.showId;
         selfSegments[self] = episode.id;
 
-        appendGetter(episode, '@context', getConfig('Episode', 'context'));
+        for (var key in config) {
+            appendGetter(show, key, config[key]);
+        }
+
         appendGetter(episode, '@id', generateUri(selfSegments));
-        appendGetter(episode, 'partOfSeries', generateUri(parentSegments));
+        appendGetter(episode, 'name', episode.title);
+        appendGetter(episode, 'partOfTVSeries', generateUri(parentSegments));
 
         callback();
     };
