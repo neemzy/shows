@@ -2,66 +2,7 @@ var async = require('async'),
     appendGetter = require('./appendGetter'),
     generateUri = require('./generateUri')
     getConfig = require('./getConfig'),
-    vulgarize = require('./vulgarize'),
-
-    /**
-     * @param {Show}     show
-     * @param {Function} callback
-     */
-    processShow = function(show, callback) {
-        'use strict';
-
-        var self = vulgarize('Show'),
-            selfSegments = {},
-            children = vulgarize('Episode'),
-            childrenSegments = {},
-            config = getConfig('Show', 'hypermedia');
-
-        selfSegments[self] = show.id;
-        childrenSegments[self] = show.id;
-        childrenSegments[children] = null;
-
-        show.episodes.count(function (err, count) {
-            for (var key in config) {
-                appendGetter(show, key, config[key]);
-            }
-
-            appendGetter(show, '@id', generateUri(selfSegments));
-            appendGetter(show, 'name', show.title);
-            appendGetter(show, children, generateUri(childrenSegments));
-            appendGetter(show, 'numberOfEpisodes', count);
-
-            callback();
-        });
-    },
-
-    /**
-     * @param {Episode}  episode
-     * @param {Function} callback
-     */
-    processEpisode = function(episode, callback) {
-        'use strict';
-
-        var self = vulgarize('Episode'),
-            selfSegments = {},
-            parent = vulgarize('Show'),
-            parentSegments = {},
-            config = getConfig('Episode', 'hypermedia');
-
-        selfSegments[parent] = episode.showId;
-        parentSegments[parent] = episode.showId;
-        selfSegments[self] = episode.id;
-
-        for (var key in config) {
-            appendGetter(show, key, config[key]);
-        }
-
-        appendGetter(episode, '@id', generateUri(selfSegments));
-        appendGetter(episode, 'name', episode.title);
-        appendGetter(episode, 'partOfTVSeries', generateUri(parentSegments));
-
-        callback();
-    };
+    vulgarize = require('./vulgarize');
 
 /**
  * Process API results to make them hypermedia-friendly
@@ -75,38 +16,88 @@ module.exports = function(results, models, callback) {
 
     if (0 == results.length) {
         callback();
-
         return;
     }
 
-    var type = '', /** @var {String} */
-        operation; /** @var {Function} */
+    var type = null;
 
     // Determine type from first result
     for (var key in models) {
         if (results[0] instanceof models[key]) {
             type = key;
-
             break;
         }
     }
 
-    // TODO: abstract this out
-    switch (type) {
-        case 'Show':
-            operation = processShow;
-            break;
-
-        case 'Episode':
-            operation = processEpisode;
-            break;
-    }
-
-    if ('undefined' === typeof operation) {
+    if (null === type) {
         callback();
-
         return;
     }
 
-    async.each(results, operation, callback);
+    var config = getConfig(type, 'hypermedia'),
+        relations = getConfig(type, 'relations'),
+        self = vulgarize(type),
+        parent = null,
+        parentKey = null,
+        children = [];
+
+    // Determine parent and children models from relations
+    for (var key in relations) {
+        switch (relations[key].type) {
+            case 'belongsTo':
+                parent = key;
+                parentKey = relations[key].foreignKey || key + 'Id';
+                break;
+
+            case 'hasMany':
+                children.push(key);
+                break;
+        }
+    }
+
+    async.each(
+        results,
+        function (result, callback) {
+            var selfSegments = {};
+
+            // Append everything from model hypermedia configuration
+            for (var key in config) {
+                appendGetter(result, key, config[key]);
+            }
+
+            // Append parent URI, if any (and alter self URI)
+            if (null != parent) {
+                var segments = {};
+                segments[parent] = result[parentKey];
+                selfSegments[parent] = result[parentKey];
+
+                appendGetter(
+                    result,
+                    parent,
+                    generateUri(segments)
+                );
+
+                result[parentKey] = undefined;
+            }
+
+            // Append children URIs, if any
+            children.forEach(function (child) {
+                var segments = {};
+                segments[self] = result.id;
+                segments[child] = null;
+
+                appendGetter(
+                    result,
+                    child,
+                    generateUri(segments)
+                );
+            });
+
+            selfSegments[self] = result.id;
+            appendGetter(result, '@id', generateUri(selfSegments));
+
+            callback();
+        },
+        callback
+    );
 };

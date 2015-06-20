@@ -6,7 +6,7 @@
     "validateUpsert": true
   },
   "properties": {
-    "title": {
+    "name": {
       "type": "string",
       "required": true
     },
@@ -25,8 +25,9 @@
   },
   "acls": [],
   "methods": [],
-  "hidden": ["id", "title"],
+  "hidden": ["id"],
   "hypermedia": {
+    "@context": "http://www.w3.org/ns/hydra/context.jsonld",
     "@type": "http://schema.org/TVSeries"
   }
 }

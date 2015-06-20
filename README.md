@@ -17,6 +17,6 @@ nodemon .
 ## Toy around
 
 ```
-curl -X POST -d "title=Community&year=2009" http://0.0.0.0:3000/api/shows
-curl -X POST -d "title=Pilot&season=1&number=1" http://0.0.0.0:3000/api/shows/1/episodes
+curl -X POST -d "name=Community&year=2009" http://0.0.0.0:3000/api/shows
+curl -X POST -d "name=Pilot&season=1&number=1" http://0.0.0.0:3000/api/shows/1/episodes
 ```
