@@ -14,5 +14,5 @@ module.exports = function(segments) {
         segments[key] && (uri += '/' + segments[key]);
     }
 
-    return root.replace(/\/$/g, '') + uri;
+    return (root + uri).replace(/\/{2,}/g, '/').toLowerCase();
 };

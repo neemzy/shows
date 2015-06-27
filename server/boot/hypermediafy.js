@@ -5,6 +5,6 @@ module.exports = function(app) {
     'use strict';
 
     app.remotes().after('**', function (ctx, next) {
-        hypermediafy(toArray(ctx.result), app.models, next);
+        hypermediafy(toArray(ctx.result), app, next);
     });
 };

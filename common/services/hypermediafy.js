@@ -2,16 +2,18 @@ var async = require('async'),
     appendGetter = require('./appendGetter'),
     generateUri = require('./generateUri')
     getConfig = require('./getConfig'),
+    getOperations = require('./getOperations'),
+    toRegex = require('./toRegex'),
     vulgarize = require('./vulgarize');
 
 /**
  * Process API results to make them hypermedia-friendly
  *
  * @param {Array}    results
- * @param {Object}   models
+ * @param {Object}   app
  * @param {Function} callback
  */
-module.exports = function(results, models, callback) {
+module.exports = function(results, app, callback) {
     'use strict';
 
     if (0 == results.length) {
@@ -22,8 +24,8 @@ module.exports = function(results, models, callback) {
     var type = null;
 
     // Determine type from first result
-    for (var key in models) {
-        if (results[0] instanceof models[key]) {
+    for (var key in app.models) {
+        if (results[0] instanceof app.models[key]) {
             type = key;
             break;
         }
@@ -39,7 +41,8 @@ module.exports = function(results, models, callback) {
         self = vulgarize(type),
         parent = null,
         parentKey = null,
-        children = [];
+        children = [],
+        operations = getOperations(type, app.remotes().handler('rest').adapter.allRoutes());
 
     // Determine parent and children models from relations
     for (var key in relations) {
@@ -58,7 +61,8 @@ module.exports = function(results, models, callback) {
     async.each(
         results,
         function (result, callback) {
-            var selfSegments = {};
+            var selfSegments = {},
+                selfUri;
 
             // Append everything from model hypermedia configuration
             for (var key in config) {
@@ -94,7 +98,16 @@ module.exports = function(results, models, callback) {
             });
 
             selfSegments[self] = result.id;
-            appendGetter(result, '@id', generateUri(selfSegments));
+            selfUri = generateUri(selfSegments);
+            appendGetter(result, '@id', selfUri);
+
+            // Append operations, if any
+            for (var uri in operations) {
+                if (toRegex(uri).test(selfUri)) {
+                    appendGetter(result, 'operations', operations[uri]);
+                    break;
+                }
+            }
 
             callback();
         },
