@@ -1,21 +1,21 @@
 var generateUri = require('./generateUri'),
+    vulgarize = require('./vulgarize'),
 
     /**
-     * Builds a REST operation's representation based on a HTTP verb
-     *
      * @param {String} verb
+     * @param {String} uri
      *
      * @return {Object|null}
      */
-    getOperationByVerb = function(verb) {
+    getOperation = function(verb, uri) {
         'use strict';
 
         var type = '';
 
         switch (verb) {
-            //FIXME: doesn't work for /model/update (need to know the URI?)
             case 'POST':
-                type = 'CreateResourceOperation';
+                // hack for LoopBack's mass-update POST route
+                type = uri.match(/update/) ? 'ReplaceResourceOperation' : 'CreateResourceOperation';
                 break;
 
             case 'PUT':
@@ -52,28 +52,32 @@ module.exports = function(name, routes) {
 
     routes.forEach(function (route) {
         var verb = ('del' === route.verb) ? 'DELETE' : route.verb.toUpperCase(),
+            isOperationalVerb = (-1 !== ['POST', 'PUT', 'DELETE'].indexOf(verb)),
+            isSubMethod = (-1 !== route.method.indexOf('prototype.__')),
+            isTarget = (route.method.split('.')[0] === name) && !isSubMethod,
             segments = {},
-            path,
-            operation;
+            uri,
+            toKeep = false,
+            operation,
+
+            isSubTarget = isSubMethod && (-1 !== [vulgarize(name), vulgarize(name, true)].indexOf(
+                route.method.split('__').pop().toLowerCase()
+            ));
 
         segments[route.path] = null;
-        path = generateUri(segments);
+        uri = generateUri(segments);
 
         // Ignore read-only stuff and other models' endpoints
-        //FIXME: doesn't work for submodels
-        if ((-1 === ['POST', 'PUT', 'DELETE'].indexOf(verb))
-            || (route.method.split('.')[0] !== name)
-            || (-1 !== route.method.indexOf('prototype.__'))
-        ) {
+        if (!isOperationalVerb || (!isTarget && !isSubTarget)) {
             return;
         }
 
-        if (!operations.hasOwnProperty(path)) {
-            operations[path] = [];
+        if (!operations.hasOwnProperty(uri)) {
+            operations[uri] = [];
         }
 
-        operation = getOperationByVerb(verb);
-        operation && operations[path].push(operation);
+        operation = getOperation(verb, uri);
+        operation && operations[uri].push(operation);
     });
 
     return operations;

@@ -48,7 +48,7 @@ module.exports = function(results, app, callback) {
     for (var key in relations) {
         switch (relations[key].type) {
             case 'belongsTo':
-                parent = key;
+                parent = vulgarize(key);
                 parentKey = relations[key].foreignKey || key + 'Id';
                 break;
 
@@ -103,7 +103,7 @@ module.exports = function(results, app, callback) {
 
             // Append operations, if any
             for (var uri in operations) {
-                if (toRegex(uri).test(selfUri)) {
+                if (selfUri.match(toRegex(uri))) {
                     appendGetter(result, 'operations', operations[uri]);
                     break;
                 }

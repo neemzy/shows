@@ -6,5 +6,5 @@
  * @return {RegExp}
  */
 module.exports = function(mask) {
-    return new RegExp('^' + mask.replace(/:[a-z]+/, '\\d+') + '$');
+    return new RegExp('^' + mask.replace(/:[a-z]+/g, '\\d+') + '$');
 }
